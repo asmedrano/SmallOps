@@ -10,6 +10,13 @@ You will need ```Fabric``` http://docs.fabfile.org/en/1.5/#installation as well 
 ## Before you get started
 ```Fabric``` communicates to your server via SSH so make sure you have that all set up. If you'd like you can set up password less sudo for the user you run any ```sudo``` commands as. This is up to you. If you don't, you'll end up sitting there typing in the password more than once. 
 
+## Running it
+```cd``` into the directory with the SmallOps code
+
+Run it 
+
+```$ fab -H ip_or_hostname_for_server -u user_run_as go:the_name_of_your_file.ini```
+
 ## Scripts
 SmallOps uses ```config.ini``` type files to orchestrate actions. As of right now you have to have your directory structured in this way.
 ```
