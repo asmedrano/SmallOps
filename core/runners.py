@@ -74,8 +74,8 @@ class FileRunner(Runner):
         mode = self.get_value(self.section, 'mode')
         put_files = put(name, directory, mode)
         # we need to chown this to the user
-        sudo('chown %s %s' % (user, put_files[0]))
-        sudo('chgrp %s %s' % (user, put_files[0]))
+        sudo('chown %s %s' % (user, put_files[0]), quiet=True)
+        sudo('chgrp %s %s' % (user, put_files[0]), quiet=True)
 
 
 class GitRunner(Runner):
