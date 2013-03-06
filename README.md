@@ -15,11 +15,11 @@ You will need ```Fabric``` http://docs.fabfile.org/en/1.5/#installation as well 
 
 Run it 
 
-```$ fab -H ip_or_hostname_for_server -u user_run_as go:the_name_of_your_file.ini```
+```$ fab -H ip_or_hostname_for_server -u user_to_run_as go:mysite/samplescript```
 
 ## Scripts
 SmallOps uses ```config.ini``` type files to orchestrate actions. As of right now you'll need to have your directory structured in this way.
-
+By default SmallOps looks for scripts in a  ```scripts``` directory of your 'site'.
 ```
 ├── core
 ├── fabfile.py
