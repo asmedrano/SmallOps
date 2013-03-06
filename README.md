@@ -8,19 +8,25 @@ We use Chef at work and its great. Especially when you are managing a bunch of m
 You will need ```Fabric``` http://docs.fabfile.org/en/1.5/#installation as well as the SmallOps code https://github.com/asmedrano/SmallOps
 
 ## Before you get started
-```Fabric``` communicates to your server via SSH so make sure you have that all set up. If you'd like you can set up password less sudo for the user you run any ```sudo``` commands as. This is up to you. If you don't, you'll end up sitting there typing in the password more than once. 
+```Fabric``` communicates to your server via SSH so make sure you have that all set up. If you'd like, you can set up passwordless sudo for the user you run any ```sudo``` commands as. This is up to you. If you don't, you'll end up sitting there typing in the password more than once. 
 
 ## Scripts
-SmallOps uses ```config.ini``` type files to orchestrate actions. As of right now you have to have your directory structured in this way.
-```
+SmallOps uses ```config.ini``` type files to orchestrate actions. As of right now you'll need to have your directory structured in this way.
 
+```
 ├── core
 ├── fabfile.py
-└── resources -> ../SmallOpsResources # this is symbolic link. Using it this way lets you keep your scripts in thier own gitrepo
-├── files
-│   └── test.txt
-└── scripts
-    └── smallops-sample-script.ini
+└── resources -> ../SmallOpsResources # this is symbolic link. Using it this way lets you keep your scripts in thier own gitrepo. See: 
+└── mysite
+    ├── files
+    │   └── test.txt
+    └── scripts
+        └── samplescript.ini
+└── myothersite
+    ├── files
+    │   └── test.txt
+    └── scripts
+        └── anothersamplescript.ini
 ```
 
 ### Example Script
