@@ -1,5 +1,5 @@
 from fabric.api import run, settings, put, sudo
-import re
+import re, os
 from ConfigParser import NoOptionError
 
 class Runner(object):
@@ -18,7 +18,7 @@ class Runner(object):
 
     def do_run(self):
         self.label = self.get_value(self.section, 'label') or None
-        self.print_label(self.section)
+        self.print_label(re.sub('\d+','',self.section))
 
     def print_label(self, prefix=''):
         if self.label != None:
@@ -32,8 +32,8 @@ class Runner(object):
 
 
 class BashRunner(Runner):
-    def __init__(self, parser, user):
-        super(BashRunner, self).__init__('bash', ['cmd', 'user'], parser, user)
+    def __init__(self, section, parser, user):
+        super(BashRunner, self).__init__(section, ['cmd', 'user'], parser, user)
 
     def do_run(self):
         super(BashRunner, self).do_run()
@@ -48,30 +48,30 @@ class BashRunner(Runner):
 
 class PackageRunner(Runner):
 
-    def __init__(self, parser, user):
-        super(PackageRunner, self).__init__('package', ['action, package'], parser, user)
+    def __init__(self, section, parser, user):
+        super(PackageRunner, self).__init__(section, ['action, package'], parser, user)
 
     def do_run(self):
         super(PackageRunner, self).do_run()
-        package = self.get_value(self.section, 'package')
-        run('sudo apt-get install %s' % package)
+        package = self.get_value(self.section, 'packages')
+        sudo('apt-get install %s' % package)
 
 
 class ServiceRunner(Runner):
 
-    def __init__(self, parser, user):
-        super(ServiceRunner, self).__init__('service', ['action, service'], parser, user)
+    def __init__(self, section, parser, user):
+        super(ServiceRunner, self).__init__(section, ['action, service'], parser, user)
 
     def do_run(self):
         super(ServiceRunner, self).do_run()
-        service = self.get_value(self.section, 'service')
+        service = self.get_value(self.section, 'name')
         action = self.get_value(self.section, 'action')
         run('sudo service %s %s' % (service, action))
 
 class FileRunner(Runner):
 
-    def __init__(self, parser, user):
-        super(FileRunner, self).__init__('file', ['directory', 'name', 'user'], parser, user)
+    def __init__(self, section, parser, user):
+        super(FileRunner, self).__init__(section, ['directory', 'name', 'user'], parser, user)
 
     def do_run(self):
         super(FileRunner, self).do_run()
@@ -79,17 +79,21 @@ class FileRunner(Runner):
         directory = self.get_value(self.section, 'directory') or '/home/%s' % user
         name = self.get_value(self.section, 'name')
         mode = self.get_value(self.section, 'mode')
-        put_files = put(name, directory, mode)
-        # we need to chown this to the user
-        if self.user != user:
-            sudo('chown %s %s' % (user, put_files[0]), quiet=True)
-            sudo('chgrp %s %s' % (user, put_files[0]), quiet=True)
+        # validate file localy
+        if os.path.isfile(name):
+            put_files = put(name, directory, mode)
+            # we need to chown this to the user
+            if self.user != user:
+                sudo('chown %s %s' % (user, put_files[0]), quiet=True)
+                sudo('chgrp %s %s' % (user, put_files[0]), quiet=True)
+        else:
+            print 'Couldnt find file "{0}". Skipping...'.format(name)
 
 
 class GitRunner(Runner):
-    def __init__(self, parser, user):
+    def __init__(self,section, parser, user):
         self.match = re.compile('[0-9a-zA-Z-_?!]+\.git')
-        super(GitRunner, self).__init__('git', ['sync', 'url', 'branch','user'], parser, user)
+        super(GitRunner, self).__init__(section, ['sync', 'url', 'branch','user'], parser, user)
 
     def do_run(self):
         super(GitRunner, self).do_run()
