@@ -1,8 +1,20 @@
 from ConfigParser import SafeConfigParser
 from fabric.api import run, env
 from core.runners import FileRunner, GitRunner, BashRunner, PackageRunner, ServiceRunner
+from core.config import *
+from collections import OrderedDict
+import re
 
-parser = SafeConfigParser()
+class SectionDict(OrderedDict):
+    _unique = 0
+
+    def __setitem__(self, key, val):
+        if key in VALID_SECTIONS:
+            self._unique += 1
+            key = str(self._unique) + key
+        OrderedDict.__setitem__(self, key, val)
+
+parser = SafeConfigParser(dict_type=SectionDict)
 
 def go(*recipes):
     """ Currently testing with fab -H nando -u asmedrano  go:mysite/samplescript"""
@@ -27,27 +39,27 @@ def go(*recipes):
                 print '***** Could not find script: %s *****' % (r)
 
 
-# Valid sections in config files
-valid_sections = ['package','bash', 'service', 'git', 'file']
+
 
 def _parse_sections(parser):
     user = env['user']
     for section in parser.sections():
-       if section in valid_sections:
-           # we'll need to validate here
-           if section == 'bash':
-               runner = BashRunner(parser=parser, user=user)
-               runner.do_run()
-           elif section == 'package':
-               runner = PackageRunner(parser=parser, user=user)
-               runner.do_run()
-           elif section == 'service':
-               runner = ServiceRunner(parser=parser, user=user)
-               runner.do_run()
-           elif section == 'git':
-               runner = GitRunner(parser=parser, user=user)
-               runner.do_run()
-           elif section == 'file':
-               runner = FileRunner(parser=parser, user=user)
-               runner.do_run()
+        if re.sub(r'\d','',section) in VALID_SECTIONS:
+            # we'll need to validate here
+            if 'bash' in section:
+                runner = BashRunner(section=section,parser=parser, user=user)
+                runner.do_run()
+            elif 'package' in section:
+                runner = PackageRunner(section=section, parser=parser, user=user)
+                runner.do_run()
+            elif 'service' in section:
+                runner = ServiceRunner(section=section, parser=parser, user=user)
+                runner.do_run()
+            elif 'git' in section:
+                runner = GitRunner(section=section, parser=parser, user=user)
+                runner.do_run()
+            elif 'file' in section:
+                runner = FileRunner(section=section, parser=parser, user=user)
+                runner.do_run()
+
 
