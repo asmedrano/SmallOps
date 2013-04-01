@@ -10,11 +10,12 @@ class Runner(object):
     instuction = None
     section = None
     user = None
-    def __init__(self, section, valid_options, parser, user):
+    def __init__(self, section, valid_options, parser, user, cws):
         self.user = user
         self.parser = parser
         self.section = section
         self.valid_options = self.valid_options + valid_options
+        self.cws = cws
 
     def do_run(self):
         self.label = self.get_value(self.section, 'label') or None
@@ -32,8 +33,8 @@ class Runner(object):
 
 
 class BashRunner(Runner):
-    def __init__(self, section, parser, user):
-        super(BashRunner, self).__init__(section, ['cmd', 'user'], parser, user)
+    def __init__(self, section, parser, user, cws):
+        super(BashRunner, self).__init__(section, ['cmd', 'user'], parser, user, cws)
 
     def do_run(self):
         super(BashRunner, self).do_run()
@@ -48,8 +49,8 @@ class BashRunner(Runner):
 
 class PackageRunner(Runner):
 
-    def __init__(self, section, parser, user):
-        super(PackageRunner, self).__init__(section, ['action, package'], parser, user)
+    def __init__(self, section, parser, user, cws):
+        super(PackageRunner, self).__init__(section, ['action, package'], parser, user, cws)
 
     def do_run(self):
         super(PackageRunner, self).do_run()
@@ -59,8 +60,8 @@ class PackageRunner(Runner):
 
 class ServiceRunner(Runner):
 
-    def __init__(self, section, parser, user):
-        super(ServiceRunner, self).__init__(section, ['action, service'], parser, user)
+    def __init__(self, section, parser, user, cws):
+        super(ServiceRunner, self).__init__(section, ['action, service'], parser, user, cws)
 
     def do_run(self):
         super(ServiceRunner, self).do_run()
@@ -70,8 +71,8 @@ class ServiceRunner(Runner):
 
 class FileRunner(Runner):
 
-    def __init__(self, section, parser, user):
-        super(FileRunner, self).__init__(section, ['directory', 'name', 'user'], parser, user)
+    def __init__(self, section, parser, user, cws):
+        super(FileRunner, self).__init__(section, ['directory', 'name', 'user'], parser, user, cws)
 
     def do_run(self):
         super(FileRunner, self).do_run()
@@ -81,19 +82,27 @@ class FileRunner(Runner):
         mode = self.get_value(self.section, 'mode')
         # validate file localy
         if os.path.isfile(name):
-            put_files = put(name, directory, mode)
+            put_files = put(name, directory, mode=mode, use_sudo=True)
             # we need to chown this to the user
             if self.user != user:
                 sudo('chown %s %s' % (user, put_files[0]), quiet=True)
                 sudo('chgrp %s %s' % (user, put_files[0]), quiet=True)
         else:
-            print 'Couldnt find file "{0}". Skipping...'.format(name)
+            # try a looking for it by in the current working site directory
+            relative_path = 'resources/%s/files/%s' % (self.cws, name)
+            if os.path.isfile(relative_path):
+                put_files = put(relative_path, directory, mode=mode, use_sudo=True)
+                if self.user != user:
+                    sudo('chown %s %s' % (user, put_files[0]), quiet=True)
+                    sudo('chgrp %s %s' % (user, put_files[0]), quiet=True)
+            else:
+                print 'Couldnt find file "{0}". Skipping...'.format(name)
 
 
 class GitRunner(Runner):
-    def __init__(self,section, parser, user):
+    def __init__(self,section, parser, user, cws):
         self.match = re.compile('[0-9a-zA-Z-_?!]+\.git')
-        super(GitRunner, self).__init__(section, ['sync', 'url', 'branch','user'], parser, user)
+        super(GitRunner, self).__init__(section, ['sync', 'url', 'branch','user'], parser, user, cws)
 
     def do_run(self):
         super(GitRunner, self).do_run()

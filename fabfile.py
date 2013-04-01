@@ -34,32 +34,29 @@ def go(*recipes):
             f = parser.read("resources/%s/scripts/%s.ini" % (site, script))
             if f:
                 print "***** Running script %s *****" % (r)
-                _parse_sections(parser)
+                _parse_sections(parser, site)
             else:
                 print '***** Could not find script: %s *****' % (r)
 
-
-
-
-def _parse_sections(parser):
+def _parse_sections(parser, cwsite):
     user = env['user']
     for section in parser.sections():
         if re.sub(r'\d','',section) in VALID_SECTIONS:
             # we'll need to validate here
             if 'bash' in section:
-                runner = BashRunner(section=section,parser=parser, user=user)
+                runner = BashRunner(section=section,parser=parser, user=user, cws=cwsite)
                 runner.do_run()
             elif 'package' in section:
-                runner = PackageRunner(section=section, parser=parser, user=user)
+                runner = PackageRunner(section=section, parser=parser, user=user,cws=cwsite)
                 runner.do_run()
             elif 'service' in section:
-                runner = ServiceRunner(section=section, parser=parser, user=user)
+                runner = ServiceRunner(section=section, parser=parser, user=user,cws=cwsite)
                 runner.do_run()
             elif 'git' in section:
-                runner = GitRunner(section=section, parser=parser, user=user)
+                runner = GitRunner(section=section, parser=parser, user=user,cws=cwsite)
                 runner.do_run()
             elif 'file' in section:
-                runner = FileRunner(section=section, parser=parser, user=user)
+                runner = FileRunner(section=section, parser=parser, user=user,cws=cwsite)
                 runner.do_run()
 
 
